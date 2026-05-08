@@ -21,38 +21,64 @@ REST API for tracking books in a library. Built with Laravel 13, MySQL 8.4, and 
 
 ## Quick start
 
+Copy-paste this one line into your terminal:
+
 ```bash
-git clone https://github.com/mamayevets/book-library-basic.git
-cd book-library-basic
+git clone https://github.com/mamayevets/book-library-basic.git && cd book-library-basic && ./setup.sh
+```
+
+That's it. ~3-5 minutes later your browser will open at the **Swagger UI** with a fully working API behind it.
+
+The script handles everything:
+
+1. Verifies Docker and Docker Compose plugin are installed and running
+2. Copies `.env.example` → `.env`
+3. Installs Composer dependencies in a one-shot Docker container (no host PHP needed)
+4. Starts Sail containers (PHP 8.5 + MySQL 8.4)
+5. Waits for MySQL to be healthy
+6. Generates the application key
+7. Runs migrations and seeds 25 fake books
+8. Generates Swagger / OpenAPI documentation
+9. Opens the Swagger UI in your browser
+
+After ~3-5 min on first run (image builds), you'll see:
+
+```
+API root        →  http://localhost
+Books endpoint  →  http://localhost/api/books
+Swagger UI      →  http://localhost/api/documentation
+```
+
+### Linux prerequisites
+
+The script will tell you exactly what is missing. If you are on **bare-metal Debian/Ubuntu**, you usually need:
+
+```bash
+sudo apt install -y docker-compose-plugin
+```
+
+macOS / Windows users running Docker Desktop already have everything.
+
+### Manual setup (if you prefer step-by-step)
+
+```bash
 cp .env.example .env
 
-# Bootstrap (first time only) — install Composer deps via a one-shot
-# Docker container so you do not need PHP/Composer on the host.
-# The --dns flags make this robust on hosts (e.g. SteamOS, some Linux
-# distros) where Docker's default DNS does not resolve api.github.com.
+# Composer deps via Docker
 docker run --rm \
-    --dns 8.8.8.8 --dns 1.1.1.1 \
     -u "$(id -u):$(id -g)" \
     -v "$(pwd):/var/www/html" \
     -w /var/www/html \
     laravelsail/php84-composer:latest \
     composer install --ignore-platform-reqs --no-interaction --no-progress
 
-# Start containers (first run is slow, ~5-10 min while images build)
 ./vendor/bin/sail up -d
-
-# Generate app key, run migrations, seed 25 fake books
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan migrate --seed
-
-# Generate Swagger documentation
 ./vendor/bin/sail artisan l5-swagger:generate
 ```
 
-The API is now running at **http://localhost**.
-
-> Already have PHP 8.5+ and Composer installed locally? Skip the
-> bootstrap `docker run` step and use `composer install` directly.
+> Already have PHP 8.5+ and Composer locally? Skip the `docker run` step and use plain `composer install`.
 
 ## Endpoints
 
