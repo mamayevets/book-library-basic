@@ -22,11 +22,20 @@ REST API for tracking books in a library. Built with Laravel 13, MySQL 8.4, and 
 ## Quick start
 
 ```bash
-git clone <repo-url> book-library-basic
+git clone https://github.com/mamayevets/book-library-basic.git
 cd book-library-basic
 cp .env.example .env
 
-# Build and start containers (first run is slow, ~5-10 min)
+# Bootstrap (first time only) — install Composer deps via a one-shot
+# Docker container so you do not need PHP/Composer on the host.
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php84-composer:latest \
+    composer install --ignore-platform-reqs --no-interaction --no-progress
+
+# Start containers (first run is slow, ~5-10 min while images build)
 ./vendor/bin/sail up -d
 
 # Generate app key, run migrations, seed 25 fake books
@@ -38,6 +47,9 @@ cp .env.example .env
 ```
 
 The API is now running at **http://localhost**.
+
+> Already have PHP 8.5+ and Composer installed locally? Skip the
+> bootstrap `docker run` step and use `composer install` directly.
 
 ## Endpoints
 
