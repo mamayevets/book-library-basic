@@ -19,52 +19,45 @@ REST API for tracking books in a library. Built with Laravel 13, MySQL 8.4, and 
 - Git
 - Free ports: `80`, `3306`, `5173`
 
-## Quick start
+## Run it
 
-Copy-paste this one line into your terminal:
+**One command. Docker Desktop running. Done.**
 
 ```bash
 git clone https://github.com/mamayevets/book-library-basic.git && cd book-library-basic && ./setup.sh
 ```
 
-That's it. ~3-5 minutes later your browser will open at the **Swagger UI** with a fully working API behind it.
+After ~3-5 minutes (first-run image builds) the Swagger UI opens automatically in your browser, with a fully working API behind it:
 
-The script handles everything:
+- **Swagger UI**     → `http://localhost/api/documentation`
+- **API root**       → `http://localhost`
+- **Books endpoint** → `http://localhost/api/books`
 
-1. Verifies Docker and Docker Compose plugin are installed and running
-2. Copies `.env.example` → `.env`
-3. Installs Composer dependencies in a one-shot Docker container (no host PHP needed)
-4. Starts Sail containers (PHP 8.5 + MySQL 8.4)
-5. Waits for MySQL to be healthy
-6. Generates the application key
-7. Runs migrations and seeds 25 fake books
-8. Generates Swagger / OpenAPI documentation
-9. Opens the Swagger UI in your browser
+The script auto-installs the Docker Compose plugin if it's missing on Linux. Anything that needs your attention is printed in plain English.
 
-After ~3-5 min on first run (image builds), you'll see:
+<details>
+<summary>What does the script actually do? (click to expand)</summary>
 
-```
-API root        →  http://localhost
-Books endpoint  →  http://localhost/api/books
-Swagger UI      →  http://localhost/api/documentation
-```
+1. Verifies Docker is installed and the daemon is running
+2. Auto-installs the Compose plugin via apt / dnf / brew if needed
+3. Copies `.env.example` → `.env`
+4. Installs Composer dependencies in a one-shot Docker container (no host PHP needed)
+5. Starts Sail containers (PHP 8.5 + MySQL 8.4)
+6. Waits for the MySQL healthcheck
+7. Generates the application key
+8. Runs migrations and seeds 25 fake books
+9. Generates Swagger / OpenAPI documentation
+10. Opens the Swagger UI in your browser
 
-### Linux prerequisites
+</details>
 
-The script will tell you exactly what is missing. If you are on **bare-metal Debian/Ubuntu**, you usually need:
-
-```bash
-sudo apt install -y docker-compose-plugin
-```
-
-macOS / Windows users running Docker Desktop already have everything.
-
-### Manual setup (if you prefer step-by-step)
+<details>
+<summary>Manual setup (if you don't want to run the script)</summary>
 
 ```bash
 cp .env.example .env
 
-# Composer deps via Docker
+# Composer deps via a one-shot Docker container
 docker run --rm \
     -u "$(id -u):$(id -g)" \
     -v "$(pwd):/var/www/html" \
@@ -78,7 +71,9 @@ docker run --rm \
 ./vendor/bin/sail artisan l5-swagger:generate
 ```
 
-> Already have PHP 8.5+ and Composer locally? Skip the `docker run` step and use plain `composer install`.
+Already have PHP 8.5+ and Composer on the host? Skip the `docker run` step and use plain `composer install`.
+
+</details>
 
 ## Endpoints
 

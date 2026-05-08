@@ -38,20 +38,53 @@ if ! docker info >/dev/null 2>&1; then
   • Linux: 'sudo systemctl start docker'"
 fi
 
-COMPOSE_KIND=""
-if docker compose version >/dev/null 2>&1; then
-    COMPOSE_KIND="plugin"
-elif command -v docker-compose >/dev/null 2>&1; then
-    COMPOSE_KIND="legacy"
+if [ "$(id -u)" -eq 0 ]; then
+    SUDO=""
+elif command -v sudo >/dev/null 2>&1; then
+    SUDO="sudo"
+else
+    SUDO=""
+fi
+
+ensure_compose() {
+    if docker compose version >/dev/null 2>&1; then
+        echo "plugin"; return 0
+    fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        echo "legacy"; return 0
+    fi
+    return 1
+}
+
+COMPOSE_KIND="$(ensure_compose || true)"
+
+if [ -z "$COMPOSE_KIND" ]; then
+    warn "Docker Compose not found — attempting to install automatically…"
+    if command -v apt-get >/dev/null 2>&1; then
+        $SUDO apt-get update -qq >/dev/null 2>&1 || true
+        $SUDO apt-get install -y -qq docker-compose-v2 >/dev/null 2>&1 \
+            || $SUDO apt-get install -y -qq docker-compose-plugin >/dev/null 2>&1 \
+            || $SUDO apt-get install -y -qq docker-compose >/dev/null 2>&1 \
+            || true
+    elif command -v dnf >/dev/null 2>&1; then
+        $SUDO dnf install -y docker-compose-plugin >/dev/null 2>&1 \
+            || $SUDO dnf install -y docker-compose >/dev/null 2>&1 \
+            || true
+    elif command -v brew >/dev/null 2>&1; then
+        brew install docker-compose >/dev/null 2>&1 || true
+    fi
+    COMPOSE_KIND="$(ensure_compose || true)"
 fi
 
 if [ -z "$COMPOSE_KIND" ]; then
-    fail "Docker Compose is not installed. Try one of:
-  • Debian 13+ (apt):     sudo apt install -y docker-compose-v2
-  • Debian / Ubuntu old:  sudo apt install -y docker-compose
-  • Docker official repo: sudo apt install -y docker-compose-plugin
+    fail "Docker Compose is not installed and could not be auto-installed.
+Please install one of:
+  • Debian / Ubuntu:      sudo apt install -y docker-compose-v2
   • Fedora / RHEL:        sudo dnf install -y docker-compose-plugin
-  • macOS / Windows:      ships with Docker Desktop — make sure Desktop is updated"
+  • Arch:                 sudo pacman -S docker-compose
+  • macOS Homebrew:       brew install docker-compose
+  • Windows / macOS:      install Docker Desktop (includes Compose)
+Then re-run ./setup.sh"
 fi
 
 info "Docker $(docker --version | awk '{print $3}' | tr -d ',') ready"
@@ -72,7 +105,11 @@ fi
 # --- 3. composer install ---
 if [ ! -d vendor ] || [ ! -f vendor/bin/sail ]; then
     info "Installing PHP dependencies via one-shot Docker container (~1-2 min on first run)…"
+    # --security-opt seccomp=unconfined is defensive: lets the container
+    # spawn DNS-resolution threads on hosts with strict seccomp profiles
+    # (e.g. SteamOS). On macOS / Windows / standard Linux it is a no-op.
     docker run --rm \
+        --security-opt seccomp=unconfined \
         -u "$(id -u):$(id -g)" \
         -v "$(pwd):/var/www/html" \
         -w /var/www/html \
