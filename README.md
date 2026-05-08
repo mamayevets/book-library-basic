@@ -96,7 +96,11 @@ To regenerate after editing annotations:
 ./vendor/bin/sail test
 ```
 
-All tests run against an isolated `testing` MySQL database (created automatically by Sail). Each test wraps in a database transaction, so the schema is reset between tests.
+Tests run on **SQLite in-memory** (configured in `phpunit.xml`) — no MySQL required, ~500ms full suite. Each test refreshes the schema via `RefreshDatabase` trait, so they are fully isolated.
+
+### CI
+
+A GitHub Actions workflow (`.github/workflows/tests.yml`) runs the full PHPUnit suite on every push and pull request to `main`. Status badge can be added to this README once the workflow has run at least once.
 
 Test layout:
 
