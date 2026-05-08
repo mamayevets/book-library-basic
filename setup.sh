@@ -38,15 +38,28 @@ if ! docker info >/dev/null 2>&1; then
   • Linux: 'sudo systemctl start docker'"
 fi
 
-if ! docker compose version >/dev/null 2>&1; then
-    fail "Docker Compose plugin is not installed.
-  • Debian / Ubuntu: 'sudo apt install -y docker-compose-plugin'
-  • Fedora / RHEL: 'sudo dnf install -y docker-compose-plugin'
-  • macOS / Windows: it ships with Docker Desktop, ensure Desktop is updated"
+COMPOSE_KIND=""
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_KIND="plugin"
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_KIND="legacy"
+fi
+
+if [ -z "$COMPOSE_KIND" ]; then
+    fail "Docker Compose is not installed. Try one of:
+  • Debian 13+ (apt):     sudo apt install -y docker-compose-v2
+  • Debian / Ubuntu old:  sudo apt install -y docker-compose
+  • Docker official repo: sudo apt install -y docker-compose-plugin
+  • Fedora / RHEL:        sudo dnf install -y docker-compose-plugin
+  • macOS / Windows:      ships with Docker Desktop — make sure Desktop is updated"
 fi
 
 info "Docker $(docker --version | awk '{print $3}' | tr -d ',') ready"
-info "Compose $(docker compose version --short 2>/dev/null || echo 'unknown') ready"
+if [ "$COMPOSE_KIND" = "plugin" ]; then
+    info "Compose plugin $(docker compose version --short 2>/dev/null || echo 'unknown') ready"
+else
+    info "Compose legacy $(docker-compose --version | awk '{print $3}' | tr -d ',') ready (Sail will use this as fallback)"
+fi
 
 # --- 2. .env ---
 if [ ! -f .env ]; then
