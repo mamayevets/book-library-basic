@@ -119,6 +119,16 @@ else
     info "vendor/ already populated — skipping composer install"
 fi
 
+# --- 3.5. permissions ---
+# Sail's container runs as user "sail" (uid 1337). On bare-metal Linux
+# (unlike Docker Desktop on macOS/Windows), there is no UID remapping,
+# so files created by the host user must also be writable by uid 1337.
+# Granting world-write on log + cache + .env is the simplest portable
+# fix and only affects this dev sandbox.
+info "Setting writable permissions on storage/, bootstrap/cache/, and .env"
+chmod -R a+w storage bootstrap/cache 2>/dev/null || true
+chmod a+w .env 2>/dev/null || true
+
 # --- 4. sail up ---
 info "Starting Sail containers (slow on first run while images build)…"
 ./vendor/bin/sail up -d
