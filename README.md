@@ -28,7 +28,10 @@ cp .env.example .env
 
 # Bootstrap (first time only) — install Composer deps via a one-shot
 # Docker container so you do not need PHP/Composer on the host.
+# The --dns flags make this robust on hosts (e.g. SteamOS, some Linux
+# distros) where Docker's default DNS does not resolve api.github.com.
 docker run --rm \
+    --dns 8.8.8.8 --dns 1.1.1.1 \
     -u "$(id -u):$(id -g)" \
     -v "$(pwd):/var/www/html" \
     -w /var/www/html \
