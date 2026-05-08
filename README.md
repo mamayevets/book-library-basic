@@ -1,5 +1,7 @@
 # Book Library API
 
+[![Tests](https://github.com/mamayevets/book-library-basic/actions/workflows/tests.yml/badge.svg)](https://github.com/mamayevets/book-library-basic/actions/workflows/tests.yml)
+
 REST API for tracking books in a library. Built with Laravel 13, MySQL 8.4, and PHP 8.5, fully containerized via Laravel Sail.
 
 ## Stack
@@ -100,7 +102,7 @@ Tests run on **SQLite in-memory** (configured in `phpunit.xml`) — no MySQL req
 
 ### CI
 
-A GitHub Actions workflow (`.github/workflows/tests.yml`) runs the full PHPUnit suite on every push and pull request to `main`. Status badge can be added to this README once the workflow has run at least once.
+A GitHub Actions workflow (`.github/workflows/tests.yml`) runs the full PHPUnit suite on every push and pull request to `main`. The build status is shown in the badge at the top of this README.
 
 Test layout:
 
